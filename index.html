@@ -1309,7 +1309,6 @@ function tick(){
 
 function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
 
-var appInitialized=false;
 var tickInterval=null;
 
 function initApp(){
@@ -1324,22 +1323,17 @@ function initApp(){
   buildTicker();
   if(!tickInterval){tickInterval=setInterval(tick,1000);}
   tick();
-  if(!appInitialized){
-    appInitialized=true;
-    loadData(function(){
-      applyHeader();
-      renderCards();
-      updateStats();
-      renderNotifs();
-      renderSocialLinks();
-      startBannerCycle();
-      goHome();
-      setTimeout(function(){if(PHOTOS.imgs&&PHOTOS.imgs.length>0) showBanner();},1500);
-    });
-  } else {
-    applyHeader();renderCards();updateStats();renderNotifs();renderSocialLinks();goHome();
+  /* ALWAYS load fresh from Firebase on every login */
+  loadData(function(){
+    applyHeader();
+    renderCards();
+    updateStats();
+    renderNotifs();
+    renderSocialLinks();
+    startBannerCycle();
+    goHome();
     setTimeout(function(){if(PHOTOS.imgs&&PHOTOS.imgs.length>0) showBanner();},1500);
-  }
+  });
 }
 </script>
 </body>
