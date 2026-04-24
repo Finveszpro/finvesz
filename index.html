@@ -737,7 +737,7 @@ function handleLogin(){
   document.getElementById('loginPage').style.display='none';
   var ov=document.getElementById('successOverlay');ov.style.display='flex';
   document.getElementById('suc-sub').textContent=getGreeting(loggedName);
-  if(loggedRole==='user'){addNotif(loggedName+' logged into System Master',loggedName,'blue');}
+  /* addNotif moved inside initApp after loadData to prevent empty D save */
   setTimeout(function(){
     ov.style.display='none';
     document.getElementById('appPage').classList.add('show');
@@ -1335,6 +1335,8 @@ function initApp(){
     renderSocialLinks();
     startBannerCycle();
     goHome();
+    /* Add login notification AFTER data is loaded - prevents empty D save */
+    if(loggedRole==='user'){addNotif(loggedName+' logged into System Master',loggedName,'blue');}
     setTimeout(function(){if(PHOTOS.imgs&&PHOTOS.imgs.length>0) showBanner();},1500);
   });
 }
