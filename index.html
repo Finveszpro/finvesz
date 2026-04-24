@@ -620,7 +620,12 @@ tr:hover .row-acts{opacity:1;}
 <div class="ov" id="ph-ov" onclick="if(event.target===this)closePhotoModal()">
   <div class="modal" style="max-width:520px;max-height:90vh;overflow-y:auto;">
     <div class="m-hd"><h3>📸 Manage Banners & Social Links</h3><button class="m-x" onclick="closePhotoModal()">✕</button></div>
-    <div class="photo-grid" id="photoGrid"></div>
+    <div style="padding:14px 22px 8px;">
+      <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">🖼️ Banner Images</div>
+      <div style="font-size:11px;color:#888;margin-bottom:10px;">Google Drive pe photo upload karo → Share → "Anyone with link" → Link copy karke yahan paste karo</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;"><input id="ph-img-url" type="url" placeholder="https://drive.google.com/file/d/..." style="flex:1;padding:8px 12px;border:1.5px solid #e4e2db;border-radius:8px;font-size:12px;font-family:Figtree,sans-serif;"/><button onclick="addPhotoUrl()" style="background:#185FA5;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Add URL</button></div>
+      <div class="photo-grid" id="photoGrid"></div>
+    </div>
     <div style="padding:0 22px 10px;border-top:1px solid #f0ede6;padding-top:14px;">
       <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">Social Links</div>
       <div class="photo-link-row"><span style="font-size:18px">📸</span><label>Instagram</label><input id="ph-insta" type="url" placeholder="https://instagram.com/..."/></div>
@@ -825,8 +830,10 @@ function saveData(silent){
   /* CRITICAL: Never save if processes are empty - prevents data wipe */
   var totalProcs=Object.keys(D).reduce(function(t,k){return t+(D[k]?D[k].length:0);},0);
   if(totalProcs===0){console.warn('saveData blocked: D is empty, not overwriting Firebase!');return;}
-  var payload={processes:D,videos:VIDEOS,notifications:NOTIFS,header:HEADER,photos:PHOTOS,passwords:PASSWORDS};
-  /* Always save to localStorage as backup */
+  /* Filter out base64 images - only save URLs to Firebase */
+  var safeImgs=(PHOTOS.imgs||[]).filter(function(img){return typeof img==='string'&&img.indexOf('data:')<0;});
+  var safePhotos={insta:PHOTOS.insta||'',fb:PHOTOS.fb||'',yt:PHOTOS.yt||'',tg:PHOTOS.tg||'',wa:PHOTOS.wa||'',interval:PHOTOS.interval||30,imgs:safeImgs};
+  var payload={processes:D,videos:VIDEOS,notifications:NOTIFS,header:HEADER,photos:safePhotos,passwords:PASSWORDS};
   try{localStorage.setItem(LS_KEY,JSON.stringify(payload));}catch(e){}
   setSyncStatus('saving');
   fetch(FB_URL,{
@@ -1071,18 +1078,22 @@ function closePhotoModal(){document.getElementById('ph-ov').classList.remove('op
 function renderPhotoGrid(){
   var grid=document.getElementById('photoGrid');
   var html='';
-  (PHOTOS.imgs||[]).forEach(function(img,i){html+='<div class="photo-thumb"><img src="'+img+'"/><button class="photo-del" onclick="deletePhoto('+i+')">✕</button></div>';});
-  html+='<label class="photo-add-box" for="photoUpload"><div>📷</div><div style="font-size:10px;margin-top:4px">Add Photo</div></label>';
-  html+='<input type="file" id="photoUpload" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(this)"/>';
+  (PHOTOS.imgs||[]).forEach(function(img,i){
+    html+='<div class="photo-thumb"><img src="'+img+'"/><button class="photo-del" onclick="deletePhoto('+i+')">✕</button></div>';
+  });
+  if((PHOTOS.imgs||[]).length===0){html='<div style="padding:8px;color:#aaa;font-size:12px;text-align:center;">Koi banner nahi — URL add karo upar se!</div>';}
   grid.innerHTML=html;
 }
-function handlePhotoUpload(input){
-  var files=Array.from(input.files),remaining=files.length;
-  files.forEach(function(file){
-    var reader=new FileReader();
-    reader.onload=function(e){if(!PHOTOS.imgs)PHOTOS.imgs=[];PHOTOS.imgs.push(e.target.result);remaining--;if(remaining===0){renderPhotoGrid();showToast('✅ '+files.length+' photo(s) added!');}};
-    reader.readAsDataURL(file);
-  });
+function addPhotoUrl(){
+  var url=document.getElementById('ph-img-url').value.trim();
+  if(!url){showToast('URL daalo pehle!');return;}
+  var match=url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if(match){url='https://drive.google.com/uc?export=view&id='+match[1];}
+  if(!PHOTOS.imgs)PHOTOS.imgs=[];
+  PHOTOS.imgs.push(url);
+  document.getElementById('ph-img-url').value='';
+  renderPhotoGrid();
+  showToast('Banner add ho gaya!');
 }
 function deletePhoto(i){PHOTOS.imgs.splice(i,1);renderPhotoGrid();showToast('Photo removed!');}
 function savePhotoSettings(){
@@ -1336,7 +1347,7 @@ function initApp(){
     startBannerCycle();
     goHome();
     /* Add login notification AFTER data is loaded - prevents empty D save */
-    if(loggedRole==='user'){addNotif(loggedName+' logged into System Master',loggedName,'blue');}
+    /* addNotif moved to after loadData */
     setTimeout(function(){if(PHOTOS.imgs&&PHOTOS.imgs.length>0) showBanner();},1500);
   });
 }
