@@ -622,7 +622,7 @@ tr:hover .row-acts{opacity:1;}
     <div class="m-hd"><h3>📸 Manage Banners & Social Links</h3><button class="m-x" onclick="closePhotoModal()">✕</button></div>
     <div style="padding:14px 22px 8px;">
       <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">🖼️ Banner Images</div>
-      <div style="font-size:11px;color:#888;margin-bottom:10px;">Google Drive pe photo upload karo → Share → "Anyone with link" → Link copy karke yahan paste karo</div>
+      <div style="font-size:11px;color:#888;margin-bottom:10px;">📱 Seedha apne phone/PC se photo upload karo — sabse aasaan!</div><div style="margin-bottom:10px;"><label style="display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#185FA5,#1D9E75);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:Figtree,sans-serif;text-align:center;">📁 Phone / PC se Upload Karo<input type="file" id="ph-file-input" accept="image/*" multiple style="display:none;" onchange="addPhotoFile(this)"/></label></div><div style="font-size:10px;color:#aaa;text-align:center;margin-bottom:8px;">— ya direct URL paste karo —</div>
       <div style="display:flex;gap:8px;margin-bottom:10px;"><input id="ph-img-url" type="url" placeholder="https://drive.google.com/file/d/..." style="flex:1;padding:8px 12px;border:1.5px solid #e4e2db;border-radius:8px;font-size:12px;font-family:Figtree,sans-serif;"/><button onclick="addPhotoUrl()" style="background:#185FA5;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Add URL</button></div>
       <div class="photo-grid" id="photoGrid"></div>
     </div>
@@ -830,9 +830,7 @@ function saveData(silent){
   /* CRITICAL: Never save if processes are empty - prevents data wipe */
   var totalProcs=Object.keys(D).reduce(function(t,k){return t+(D[k]?D[k].length:0);},0);
   if(totalProcs===0){console.warn('saveData blocked: D is empty, not overwriting Firebase!');return;}
-  /* Filter out base64 images - only save URLs to Firebase */
-  var safeImgs=(PHOTOS.imgs||[]).filter(function(img){return typeof img==='string'&&img.indexOf('data:')<0;});
-  var safePhotos={insta:PHOTOS.insta||'',fb:PHOTOS.fb||'',yt:PHOTOS.yt||'',tg:PHOTOS.tg||'',wa:PHOTOS.wa||'',interval:PHOTOS.interval||30,imgs:safeImgs};
+  var safePhotos={insta:PHOTOS.insta||'',fb:PHOTOS.fb||'',yt:PHOTOS.yt||'',tg:PHOTOS.tg||'',wa:PHOTOS.wa||'',interval:PHOTOS.interval||30,imgs:PHOTOS.imgs||[]};
   var payload={processes:D,videos:VIDEOS,notifications:NOTIFS,header:HEADER,photos:safePhotos,passwords:PASSWORDS};
   try{localStorage.setItem(LS_KEY,JSON.stringify(payload));}catch(e){}
   setSyncStatus('saving');
@@ -1087,13 +1085,39 @@ function renderPhotoGrid(){
 function addPhotoUrl(){
   var url=document.getElementById('ph-img-url').value.trim();
   if(!url){showToast('URL daalo pehle!');return;}
-  var match=url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-  if(match){url='https://drive.google.com/thumbnail?id='+match[1]+'&sz=w1000';}
   if(!PHOTOS.imgs)PHOTOS.imgs=[];
   PHOTOS.imgs.push(url);
   document.getElementById('ph-img-url').value='';
   renderPhotoGrid();
   showToast('Banner add ho gaya!');
+}
+function addPhotoFile(input){
+  var files=Array.from(input.files);
+  if(!files.length) return;
+  if(!PHOTOS.imgs)PHOTOS.imgs=[];
+  var done=0;
+  files.forEach(function(file){
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        var canvas=document.createElement('canvas');
+        var MAX=900;
+        var w=img.width,h=img.height;
+        if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+        if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        var dataUrl=canvas.toDataURL('image/jpeg',0.72);
+        PHOTOS.imgs.push(dataUrl);
+        done++;
+        if(done===files.length){renderPhotoGrid();showToast('✅ '+done+' photo(s) upload ho gayi!');}
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value='';
 }
 function deletePhoto(i){PHOTOS.imgs.splice(i,1);renderPhotoGrid();showToast('Photo removed!');}
 function savePhotoSettings(){
