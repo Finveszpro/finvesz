@@ -800,7 +800,6 @@ function uid(){return'_'+Math.random().toString(36).slice(2,9);}
 var LS_KEY='finveszpro_v3';
 
 /* ─── FIREBASE REALTIME DATABASE SYNC ─── */
-var D={office:[],admin:[],wealth:[],trials:[]};
 var FB_URL='https://finveszpro-default-rtdb.asia-southeast1.firebasedatabase.app/data.json';
 
 function setSyncStatus(ok,msg){
@@ -823,6 +822,9 @@ function setSyncStatus(ok,msg){
 }
 
 function saveData(silent){
+  /* CRITICAL: Never save if processes are empty - prevents data wipe */
+  var totalProcs=Object.keys(D).reduce(function(t,k){return t+(D[k]?D[k].length:0);},0);
+  if(totalProcs===0){console.warn('saveData blocked: D is empty, not overwriting Firebase!');return;}
   var payload={processes:D,videos:VIDEOS,notifications:NOTIFS,header:HEADER,photos:PHOTOS,passwords:PASSWORDS};
   /* Always save to localStorage as backup */
   try{localStorage.setItem(LS_KEY,JSON.stringify(payload));}catch(e){}
@@ -888,7 +890,7 @@ function resetToDefault(){
 }
 function exportData(){var blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='finveszpro-data.json';a.click();showToast('Data exported!');}
 
-/* D is declared before FB_URL */
+var D={office:[{id:'_na5371c',n:'Client Database',pc:'—',ps:'—',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_4l1g8tf',n:'GSTR-1',pc:'Vani',ps:'Yash Dani · Chandan',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_sfzn99o',n:'GST-3B',pc:'Vani',ps:'Yash Dani · Chandan',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_9ntb59b',n:'GSTR-9',pc:'Vani',ps:'Yash Dani · Chandan',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_48u9xax',n:'TDS Return',pc:'Vani',ps:'Yash Dani · Snigdha',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_s7lmuhk',n:'ITR Filing',pc:'Vani',ps:'Yash Dani · Snigdha',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_ex15540',n:'Order to Billing',pc:'Vani',ps:'Yash Dani · Vinita',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_b2impiq',n:'Accounting Tracker',pc:'—',ps:'—',fms:'',chk:'',form:'',dash:'',vid:''}],admin:[{id:'_pmm2xad',n:'Fixed Asset Purchase',pc:'Vani',ps:'Yash Dani · Vinita',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_q7rjdov',n:'Checklist',pc:'Vani',ps:'Yash Dani · Vinita',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_qf5o2sa',n:'Checklist (PC Sheet)',pc:'Vani',ps:'Yash Dani · Vinita',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_2rrf1e1',n:'Staff Recruitment',pc:'Vani',ps:'Yash Dani · Vani',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_qu1kb6p',n:'Staff Onboarding / KYC',pc:'Vani',ps:'Staff Onboarding',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_sarn8nk',n:'Delegation Sheet',pc:'Divanshu',ps:'Yash Dani · Vinita',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_8wvgoqr',n:'Full Kitting Sheet',pc:'Divanshu',ps:'Yash Dani · Vinita',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_fccn3wu',n:'Final CRM FMS',pc:'Vani',ps:'Yash Dani · Vinita',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_1kj13kn',n:'Utility Bills (Elec.)',pc:'—',ps:'—',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_ce272gx',n:'Rental Invoice Mgmt',pc:'—',ps:'—',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_1yo8kum',n:'Budget &amp; Cost Control',pc:'—',ps:'—',fms:'',chk:'',form:'',dash:'',vid:''}],wealth:[{id:'_rnixi2h',n:'Client Registrations',pc:'Vani',ps:'Yash Dani · Vani',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_jjtsnn3',n:'Client Investments',pc:'—',ps:'—',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_xz21bpd',n:'Tele-Calling',pc:'Priya',ps:'Yash Dani · Priya',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_k19l34e',n:'Risk Profiling Sheet',pc:'Vani',ps:'Yash Dani · Vani',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_gxm3w9e',n:'Incentive Calculator',pc:'Divanshu',ps:'Yash Dani · Vinita',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_54dggvn',n:'Client Onboarding MGMT',pc:'Divanshu',ps:'Yash Dani · Vinita',fms:'',chk:'',form:'',dash:'',vid:''}],trials:[{id:'_m23cwdl',n:'Executive MIS Summary',pc:'Divanshu',ps:'Yash Dani · Vinita',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_fy90r7w',n:'Client Onboarding Mgmt System',pc:'Divanshu',ps:'Yash Dani · Vinita',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_pouqr8f',n:'Training Videos',pc:'Divanshu',ps:'Yash Dani · Vinita',fms:'',chk:'',form:'',dash:'',vid:''},{id:'_qe5dk2i',n:'Office Reports',pc:'Divanshu',ps:'Yash Dani · Vinita',fms:'',chk:'',form:'',dash:'',vid:''}]};
 
 var VIDEOS=[
   {id:uid(),title:'GST - Complete Training Module',url:'https://sites.google.com/finveszprosolutionz.com/finvez-training-system-portal/gst-complete-training-module',cat:'GST',desc:'GSTR-1, GST-3B, GSTR-9 complete process'},
