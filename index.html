@@ -1088,7 +1088,7 @@ function addPhotoUrl(){
   var url=document.getElementById('ph-img-url').value.trim();
   if(!url){showToast('URL daalo pehle!');return;}
   var match=url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-  if(match){url='https://drive.google.com/uc?export=view&id='+match[1];}
+  if(match){url='https://drive.google.com/thumbnail?id='+match[1]+'&sz=w1000';}
   if(!PHOTOS.imgs)PHOTOS.imgs=[];
   PHOTOS.imgs.push(url);
   document.getElementById('ph-img-url').value='';
